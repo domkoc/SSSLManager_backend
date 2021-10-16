@@ -4,10 +4,14 @@ import Vapor
 final class Todo: Model, Content {
     static let schema = "todos"
     
+    struct FieldKeys {
+        static var title: FieldKey { "title" }
+    }
+    
     @ID(key: .id)
     var id: UUID?
 
-    @Field(key: "title")
+    @Field(key: FieldKeys.title)
     var title: String
 
     init() { }
