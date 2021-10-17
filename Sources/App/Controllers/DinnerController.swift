@@ -25,7 +25,7 @@ struct DinnerController: RouteCollection {
         throw Abort(.notImplemented)
     }
     fileprivate func getDinner(req: Request) throws -> EventLoopFuture<Dinner.Public> {
-        guard let dinnerId = req.parameters.get("dinnerId", as: Int.self) else {
+        guard let dinnerId = req.parameters.get("dinnerId", as: UUID.self) else {
             throw Abort(.badRequest)
         }
         
@@ -39,8 +39,8 @@ struct DinnerController: RouteCollection {
     }
     fileprivate func inviteUser(req: Request) throws -> EventLoopFuture<Dinner.Public> {
         guard
-            let dinnerId = req.parameters.get("dinnerId", as: Int.self),
-            let inviteeId = req.parameters.get("userId", as: Int.self) else {
+            let dinnerId = req.parameters.get("dinnerId", as: UUID.self),
+            let inviteeId = req.parameters.get("userId", as: UUID.self) else {
                 throw Abort(.badRequest)
             }
         

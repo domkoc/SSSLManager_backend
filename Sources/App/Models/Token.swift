@@ -16,7 +16,7 @@ enum SessionSource: Int, Content {
 final class Token: Model {
     static let schema = "tokens"
     @ID(key: .id)
-    var id: Int?
+    var id: UUID?
     @Parent(key: "user_id")
     var user: User
     @Field(key: "value")
@@ -28,7 +28,7 @@ final class Token: Model {
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     init() {}
-    init(id: Int? = nil, userId: User.IDValue, token: String,
+    init(id: UUID? = nil, userId: User.IDValue, token: String,
          source: SessionSource, expiresAt: Date?) {
         self.id = id
         self.$user.id = userId
@@ -38,3 +38,13 @@ final class Token: Model {
     }
 }
 
+extension Token: ModelTokenAuthenticatable {
+    static let valueKey = \Token.$value
+    static let userKey = \Token.$user
+    var isValid: Bool {
+        guard let expiryDate = expiresAt else {
+            return true
+        }
+        return expiryDate > Date()
+    }
+}

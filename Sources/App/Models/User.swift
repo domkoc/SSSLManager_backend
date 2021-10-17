@@ -11,13 +11,13 @@ import Vapor
 final class User: Model {
     struct Public: Content {
         let username: String
-        let id: Int
+        let id: UUID
         let createdAt: Date?
         let updatedAt: Date?
     }
     static let schema = "users"
     @ID(key: .id)
-    var id: Int?
+    var id: UUID?
     @Field(key: "username")
     var username: String
     @Field(key: "password_hash")
@@ -27,7 +27,7 @@ final class User: Model {
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     init() {}
-    init(id: Int? = nil, username: String, passwordHash: String) {
+    init(id: UUID? = nil, username: String, passwordHash: String) {
         self.id = id
         self.username = username
         self.passwordHash = passwordHash
@@ -52,5 +52,13 @@ extension User {
                id: try requireID(),
                createdAt: createdAt,
                updatedAt: updatedAt)
+    }
+}
+
+extension User: ModelAuthenticatable {
+    static let usernameKey = \User.$username
+    static let passwordHashKey = \User.$passwordHash
+    func verify(password: String) throws -> Bool {
+        try Bcrypt.verify(password, created: self.passwordHash)
     }
 }

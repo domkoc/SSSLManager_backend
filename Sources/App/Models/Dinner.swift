@@ -10,7 +10,7 @@ import Vapor
 
 final class Dinner: Model, Content {
     struct Public: Content {
-        let id: Int
+        let id: UUID
         let date: Date
         let location: String
         let host: User.Public
@@ -20,7 +20,7 @@ final class Dinner: Model, Content {
     }
     static let schema = "dinners"
     @ID(key: .id)
-    var id: Int?
+    var id: UUID?
     @Field(key: "date")
     var date: Date
     @Field(key: "location")
@@ -34,7 +34,7 @@ final class Dinner: Model, Content {
     @Siblings(through: DinnerInviteePivot.self, from: \.$dinner, to: \.$invitee)
     var invitees: [User]
     init() {}
-    init(id: Int? = nil, date: Date, location: String, hostId: User.IDValue) {
+    init(id: UUID? = nil, date: Date, location: String, hostId: User.IDValue) {
         self.id = id
         self.date = date
         self.$host.id = hostId

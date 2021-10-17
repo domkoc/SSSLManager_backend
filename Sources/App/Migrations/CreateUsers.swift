@@ -10,7 +10,7 @@ import Fluent
 struct CreateUsers: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(User.schema)
-            .field("id", .int, .identifier(auto: true))
+            .field("id", .uuid, .identifier(auto: true))
             .field("username", .string, .required)
             .unique(on: "username")
             .field("password_hash", .string, .required)

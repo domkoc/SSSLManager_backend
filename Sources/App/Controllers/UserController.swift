@@ -28,6 +28,12 @@ struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let usersRoute = routes.grouped("users")
         usersRoute.post("signup", use: create)
+        let tokenProtected = usersRoute.grouped(Token.authenticator())
+        tokenProtected.get("me", use: getMyOwnUser)
+        let passwordProtected = usersRoute.grouped(User.authenticator())
+        passwordProtected.post("login", use: login)
+        
+        
     }
     fileprivate func create(req: Request) throws -> EventLoopFuture<NewSession> {
         try UserSignup.validate(content: req)
@@ -49,13 +55,19 @@ struct UserController: RouteCollection {
         }.flatMapThrowing {
             NewSession(token: token.value, user: try user.asPublic())
         }
-
+        
     }
     fileprivate func login(req: Request) throws -> EventLoopFuture<NewSession> {
-        throw Abort(.notImplemented)
+        let user = try req.auth.require(User.self)
+        let token = try user.createToken(source: .login)
+        return token
+            .save(on: req.db)
+            .flatMapThrowing {
+                NewSession(token: token.value, user: try user.asPublic())
+            }
     }
     func getMyOwnUser(req: Request) throws -> User.Public {
-        throw Abort(.notImplemented)
+        try req.auth.require(User.self).asPublic()
     }
     private func checkIfUserExists(_ username: String, req: Request) -> EventLoopFuture<Bool> {
         User.query(on: req.db)
