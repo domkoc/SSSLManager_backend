@@ -11,6 +11,9 @@ import Fluent
 struct UserSignup: Content {
     let username: String
     let password: String
+    let fullname: String
+    let nickname: String?
+    let schgroup: SCHgroup
 }
 
 struct NewSession: Content {
@@ -21,7 +24,10 @@ struct NewSession: Content {
 extension UserSignup: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("username", as: String.self, is: !.empty)
+        validations.add("username", as: String.self, is: .email)
         validations.add("password", as: String.self, is: .count(6...))
+        validations.add("fullname", as: String.self, is: !.empty)
+        validations.add("schgroup", as: SCHgroup.self)
     }
 }
 struct UserController: RouteCollection {
