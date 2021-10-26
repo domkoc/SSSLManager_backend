@@ -35,7 +35,7 @@ final class User: Model {
     var passwordHash: String
     @Field(key: "fullname")
     var fullname: String
-    @Field(key: "nickname")
+    @OptionalField(key: "nickname")
     var nickname: String?
     @Enum(key: "schgroup")
     var schgroup: SCHgroup

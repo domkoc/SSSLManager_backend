@@ -10,7 +10,7 @@ import Fluent
 struct CreateDinners: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         database.schema(Dinner.schema)
-            .field("id", .uuid, .identifier(auto: true))
+            .id()
             .field("date", .datetime, .required)
             .field("host_id", .uuid, .references("users", "id"), .required)
             .field("created_at", .datetime, .required)

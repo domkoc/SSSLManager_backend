@@ -23,7 +23,7 @@ final class Token: Model {
     var value: String
     @Field(key: "source")
     var source: SessionSource
-    @Field(key: "expires_at")
+    @OptionalField(key: "expires_at")
     var expiresAt: Date?
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?

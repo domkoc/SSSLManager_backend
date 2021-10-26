@@ -18,7 +18,7 @@ struct CreateUsers: Migration {
                 .create()
                 .flatMap { schgroup in
                     database.schema(User.schema)
-                        .field("id", .uuid, .identifier(auto: true))
+                        .id()
                         .field("username", .string, .required)
                         .unique(on: "username")
                         .field("password_hash", .string, .required)

@@ -19,11 +19,15 @@ public func configure(_ app: Application) throws {
     
     app.middleware.use(ErrorMiddleware.default(environment: app.environment))
     
+    app.routes.caseInsensitive = true
     app.migrations.add(CreateUsers())
     app.migrations.add(CreateDinners())
     app.migrations.add(CreateDinnerInviteePivotMigration())
     app.migrations.add(CreateTokens())
     app.migrations.add(CreateTodo())
+    
+//    app.logger.logLevel = .debug
+    
     try app.autoMigrate().wait()
     
     // register routes
