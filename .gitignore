@@ -92,4 +92,4 @@ iOSInjectionProject/
 *.sqlite
 
 *.env
-*.env.develop
+*.env.development
