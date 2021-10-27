@@ -90,3 +90,6 @@ fastlane/test_output
 iOSInjectionProject/
 
 *.sqlite
+
+*.env
+*.env.develop

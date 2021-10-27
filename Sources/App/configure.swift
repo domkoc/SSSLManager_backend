@@ -26,10 +26,13 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateTokens())
     app.migrations.add(CreateTodo())
     
-//    app.logger.logLevel = .debug
+    app.logger.logLevel = .debug
     
     try app.autoMigrate().wait()
     
-    // register routes
     try routes(app)
+    print("routes:")
+    app.routes.all.forEach { route in
+        print(route)
+    }
 }

@@ -37,6 +37,7 @@ struct UserController: RouteCollection {
         let tokenProtected = usersRoute.grouped(Token.authenticator())
         tokenProtected.get("me", use: getMyOwnUser)
         tokenProtected.post("logout", use: logout)
+        tokenProtected.put("update", use: update)
         let passwordProtected = usersRoute.grouped(User.authenticator())
         passwordProtected.post("login", use: login)
     }
@@ -73,21 +74,21 @@ struct UserController: RouteCollection {
     func getMyOwnUser(req: Request) throws -> User.Public {
         try req.auth.require(User.self).asPublic()
     }
-    func logout(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+    fileprivate func logout(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         guard let tokenString = req.headers.bearerAuthorization?.token else {
             return req.eventLoop.future(HTTPStatus.notFound)
         }
         return Token.query(on: req.db)
             .filter(\.$value == tokenString)
             .first()
-            .flatMap { token -> EventLoopFuture<HTTPStatus> in
-                guard let token = token else {
-                    return req.eventLoop.future(HTTPStatus.notFound)
-                }
-                return token.delete(on: req.db).map {
-                    return HTTPStatus.ok
-                }
+            .unwrap(or: Abort(.notFound))
+            .flatMap { token in
+                token.delete(on: req.db).transform(to: .noContent)
             }
+    }
+    fileprivate func update(req: Request) throws -> EventLoopFuture<User.Public> {
+            //let user = try req.auth.require(User.self) // TODO: Itt tartok
+        throw Abort(.notImplemented)
     }
     private func checkIfUserExists(_ username: String, req: Request) -> EventLoopFuture<Bool> {
         User.query(on: req.db)
