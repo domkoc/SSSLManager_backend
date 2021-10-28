@@ -16,13 +16,13 @@ enum SCHgroup: String, Codable {
     case fekete
 }
 
-final class User: Model {
+final class User {
     struct Public: Content {
         let username: String
         let id: UUID
         let fullname: String
         let nickname: String?
-        let schgroup: SCHgroup
+        let schgroup: SCHgroup?
         let createdAt: Date?
         let updatedAt: Date?
     }
@@ -37,14 +37,14 @@ final class User: Model {
     var fullname: String
     @OptionalField(key: "nickname")
     var nickname: String?
-    @Enum(key: "schgroup")
-    var schgroup: SCHgroup
+    @OptionalEnum(key: "schgroup")
+    var schgroup: SCHgroup?
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     init() {}
-    init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String?, schgroup: SCHgroup) {
+    init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String? = nil, schgroup: SCHgroup? = nil) {
         self.id = id
         self.username = username
         self.passwordHash = passwordHash
@@ -52,9 +52,6 @@ final class User: Model {
         self.nickname = nickname
         self.schgroup = schgroup
     }
-}
-
-extension User {
     static func create(from userSignup: UserSignup) throws -> User {
         User(username: userSignup.username,
              passwordHash: try Bcrypt.hash(userSignup.password),
@@ -88,3 +85,6 @@ extension User: ModelAuthenticatable {
         try Bcrypt.verify(password, created: self.passwordHash)
     }
 }
+
+extension User: ModelSessionAuthenticatable {}
+extension User: ModelCredentialsAuthenticatable {}

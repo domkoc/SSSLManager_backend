@@ -13,7 +13,7 @@ struct UserSignup: Content {
     let password: String
     let fullname: String
     let nickname: String?
-    let schgroup: SCHgroup
+    let schgroup: SCHgroup?
 }
 
 struct NewSession: Content {

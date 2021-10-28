@@ -1,6 +1,7 @@
 import Fluent
 import FluentSQLiteDriver
 import Vapor
+import SendGrid
 
 // configures your application
 public func configure(_ app: Application) throws {
@@ -35,4 +36,6 @@ public func configure(_ app: Application) throws {
     app.routes.all.forEach { route in
         print(route)
     }
+    
+    app.sendgrid.initialize()
 }
