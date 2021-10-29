@@ -16,6 +16,11 @@ enum SCHgroup: String, Codable {
     case fekete
 }
 
+enum Roles: String, Codable {
+    case user
+    case admin
+}
+
 final class User {
     struct Public: Content {
         let username: String
@@ -23,6 +28,7 @@ final class User {
         let fullname: String
         let nickname: String?
         let schgroup: SCHgroup?
+        let roles: [Roles]
         let createdAt: Date?
         let updatedAt: Date?
     }
@@ -39,25 +45,30 @@ final class User {
     var nickname: String?
     @OptionalEnum(key: "schgroup")
     var schgroup: SCHgroup?
+    @Field(key: "roles")
+    var roles: [Roles]
     @Timestamp(key: "created_at", on: .create)
     var createdAt: Date?
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
     init() {}
-    init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String? = nil, schgroup: SCHgroup? = nil) {
+    init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String?, schgroup: SCHgroup?, roles: [Roles]) {
         self.id = id
         self.username = username
         self.passwordHash = passwordHash
         self.fullname = fullname
         self.nickname = nickname
         self.schgroup = schgroup
+        self.roles = roles
     }
     static func create(from userSignup: UserSignup) throws -> User {
-        User(username: userSignup.username,
-             passwordHash: try Bcrypt.hash(userSignup.password),
-             fullname: userSignup.fullname,
-             nickname: userSignup.nickname,
-             schgroup: userSignup.schgroup)
+        let roles: [Roles] = [.user]
+        return User(username: userSignup.username,
+                    passwordHash: try Bcrypt.hash(userSignup.password),
+                    fullname: userSignup.fullname,
+                    nickname: userSignup.nickname,
+                    schgroup: userSignup.schgroup,
+                    roles: roles)
         
     }
     func createToken(source: SessionSource) throws -> Token {
@@ -73,6 +84,7 @@ final class User {
                fullname: fullname,
                nickname: nickname,
                schgroup: schgroup,
+               roles: roles,
                createdAt: createdAt,
                updatedAt: updatedAt)
     }
@@ -87,4 +99,3 @@ extension User: ModelAuthenticatable {
 }
 
 extension User: ModelSessionAuthenticatable {}
-extension User: ModelCredentialsAuthenticatable {}
