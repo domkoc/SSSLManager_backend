@@ -10,6 +10,7 @@ import Vapor
 
 enum EventError {
     case eventTitleTaken
+    case notApplyable
 }
 
 extension EventError: AbortError {
@@ -20,12 +21,16 @@ extension EventError: AbortError {
         switch self {
         case .eventTitleTaken:
             return .conflict
+        case .notApplyable:
+            return .conflict
         }
     }
     var reason: String {
         switch self {
         case .eventTitleTaken:
             return "Event title already taken"
+        case .notApplyable:
+            return "Event is not applyable"
         }
     }
 }

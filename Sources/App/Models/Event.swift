@@ -21,6 +21,7 @@ final class Event: Model, Content {
         var isApplyable: Bool
         var applicationStart: Double?
         var applicationEnd: Double?
+        var parentEvent: Event.IDValue?
     }
     static let schema = "events"
     @ID
@@ -51,9 +52,9 @@ final class Event: Model, Content {
               from: \.$event,
               to: \.$user)
     var workers: [User]
-    @Siblings(through: SubEventPivot.self,
-              from: \.$event,
-              to: \.$subEvent)
+    @OptionalParent(key: "parent_event")
+    var parentEvent: Event?
+    @Children(for: \.$parentEvent)
     var subEvents: [Event]
     init() {}
     init(id: UUID? = nil,
@@ -65,7 +66,8 @@ final class Event: Model, Content {
          location: String,
          isApplyable: Bool,
          applicationStart: Date? = nil,
-         applicationEnd: Date? = nil) {
+         applicationEnd: Date? = nil,
+         parentEvent: Event.IDValue?) {
         self.id = id
         self.$organizer.id = organizer
         self.title = title
@@ -76,6 +78,7 @@ final class Event: Model, Content {
         self.isApplyable = isApplyable
         self.applicationStart = applicationStart
         self.applicationEnd = applicationEnd
+        self.$parentEvent.id = parentEvent
     }
     static func create(from newEvent: NewEvent, organizer: User.IDValue) throws -> Event {
         Event(organizer: organizer,
@@ -86,7 +89,8 @@ final class Event: Model, Content {
               location: newEvent.location,
               isApplyable: false,
               applicationStart: nil,
-              applicationEnd: nil)
+              applicationEnd: nil,
+              parentEvent: nil)
     }
 }
 
@@ -101,7 +105,8 @@ extension Event {
              location: location,
              isApplyable: isApplyable,
              applicationStart: applicationStart?.timeIntervalSince1970,
-             applicationEnd: applicationEnd?.timeIntervalSince1970)
+             applicationEnd: applicationEnd?.timeIntervalSince1970,
+             parentEvent: $parentEvent.id)
   }
 }
 

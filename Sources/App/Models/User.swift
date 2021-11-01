@@ -51,6 +51,8 @@ final class User {
     var createdAt: Date?
     @Timestamp(key: "updated_at", on: .update)
     var updatedAt: Date?
+    @Children(for: \.$organizer)
+    var events: [Event]
     init() {}
     init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String?, schgroup: SCHgroup?, roles: [Roles]) {
         self.id = id

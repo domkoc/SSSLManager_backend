@@ -26,7 +26,6 @@ public func configure(_ app: Application) throws {
     app.migrations.add(CreateEvent())
     app.migrations.add(CreateEventApplicantsPivot())
     app.migrations.add(CreateEventWorkersPivot())
-    app.migrations.add(CreateSubEventPivot())
     
     app.logger.logLevel = .debug
     

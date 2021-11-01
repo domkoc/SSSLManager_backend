@@ -22,6 +22,8 @@ struct CreateEvent: Migration {
             .field("is_applyable", .bool, .required)
             .field("application_start", .datetime)
             .field("application_end", .datetime)
+            .field("parent_event", .uuid,
+                   .references("events", "id", onDelete: .cascade))
             .create()
     }
     func revert(on database: Database) -> EventLoopFuture<Void> {
