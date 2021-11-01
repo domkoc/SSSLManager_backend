@@ -13,6 +13,8 @@ struct CreateEvent: Migration {
         database.schema("events")
             .id()
             .field("title", .string, .required)
+            .field("organizer", .uuid, .required,
+                    .references("users", "id", onDelete: .cascade))
             .field("description", .string, .required)
             .field("start_date", .datetime, .required)
             .field("end_date", .datetime, .required)

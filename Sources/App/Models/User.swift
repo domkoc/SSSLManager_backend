@@ -78,9 +78,12 @@ final class User {
                          token: [UInt8].random(count: 16).base64, source: source,
                          expiresAt: expiryDate)
     }
-    func asPublic() throws -> Public {
+}
+
+extension User {
+    func asPublic() -> Public {
         Public(username: username,
-               id: try requireID(),
+               id: id!,
                fullname: fullname,
                nickname: nickname,
                schgroup: schgroup,
@@ -88,6 +91,24 @@ final class User {
                createdAt: createdAt,
                updatedAt: updatedAt)
     }
+}
+
+extension EventLoopFuture where Value: User {
+  func asPublic() -> EventLoopFuture<User.Public> {
+    return self.map { $0.asPublic() }
+  }
+}
+
+extension Collection where Element: User {
+  func asPublic() -> [User.Public] {
+    self.map { $0.asPublic() }
+  }
+}
+
+extension EventLoopFuture where Value == Array<User> {
+  func asPublic() -> EventLoopFuture<[User.Public]> {
+    self.map { $0.asPublic() }
+  }
 }
 
 extension User: ModelAuthenticatable {

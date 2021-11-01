@@ -17,12 +17,14 @@ extension UserError: AbortError {
     }
     var status: HTTPResponseStatus {
         switch self {
-        case .usernameTaken: return .conflict
+        case .usernameTaken:
+            return .conflict
         }
     }
     var reason: String {
         switch self {
-        case .usernameTaken: return "Username already taken"
+        case .usernameTaken:
+            return "Username already taken"
         }
     }
 }

@@ -10,6 +10,18 @@ import Fluent
 import Vapor
 
 final class Event: Model, Content {
+    struct Public: Content {
+        var id: UUID?
+        var organizer: User.IDValue
+        var title: String
+        var description: String
+        var startDate: Double
+        var endDate: Double
+        var location: String
+        var isApplyable: Bool
+        var applicationStart: Double?
+        var applicationEnd: Double?
+    }
     static let schema = "events"
     @ID
     var id: UUID?
@@ -42,7 +54,71 @@ final class Event: Model, Content {
     @Siblings(through: SubEventPivot.self,
               from: \.$event,
               to: \.$subEvent)
-    var SubEvents: [Event]
-    
+    var subEvents: [Event]
     init() {}
+    init(id: UUID? = nil,
+         organizer: User.IDValue,
+         title: String,
+         description: String,
+         startDate: Date,
+         endDate: Date,
+         location: String,
+         isApplyable: Bool,
+         applicationStart: Date? = nil,
+         applicationEnd: Date? = nil) {
+        self.id = id
+        self.$organizer.id = organizer
+        self.title = title
+        self.description = description
+        self.startDate = startDate
+        self.endDate = endDate
+        self.location = location
+        self.isApplyable = isApplyable
+        self.applicationStart = applicationStart
+        self.applicationEnd = applicationEnd
+    }
+    static func create(from newEvent: NewEvent, organizer: User.IDValue) throws -> Event {
+        Event(organizer: organizer,
+              title: newEvent.title,
+              description: newEvent.description,
+              startDate: Date(timeIntervalSince1970: newEvent.startDate),
+              endDate: Date(timeIntervalSince1970: newEvent.endDate),
+              location: newEvent.location,
+              isApplyable: false,
+              applicationStart: nil,
+              applicationEnd: nil)
+    }
+}
+
+extension Event {
+  func asPublic() -> Event.Public {
+      Public(id: id,
+             organizer: $organizer.id,
+             title: title,
+             description: description,
+             startDate: startDate.timeIntervalSince1970,
+             endDate: endDate.timeIntervalSince1970,
+             location: location,
+             isApplyable: isApplyable,
+             applicationStart: applicationStart?.timeIntervalSince1970,
+             applicationEnd: applicationEnd?.timeIntervalSince1970)
+  }
+}
+
+extension EventLoopFuture where Value: Event {
+  func asPublic() throws -> EventLoopFuture<Event.Public> {
+    self.map { $0.asPublic() }
+  }
+}
+
+extension Collection where Element: Event {
+  func asPublic() -> [Event.Public] {
+    self.map { $0.asPublic() }
+  }
+}
+
+extension EventLoopFuture where Value == Array<Event> {
+  func asPublic() -> EventLoopFuture<[Event.Public]> {
+    self.map { $0.asPublic() }
+  }
 }
