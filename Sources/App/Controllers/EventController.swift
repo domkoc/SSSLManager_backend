@@ -37,6 +37,9 @@ struct EventController: RouteCollection {
         eventsRoute.delete(":eventID", "apply", use: deleteApplicationToEvent)
         eventsRoute.post(":eventID", ":userID", use: acceptApplicant)
         eventsRoute.post(":eventID", "addSubEvent", use: addSubEvent)
+        eventsRoute.get(":eventID", "subEvents", use: getSubEventsByEventId)
+        eventsRoute.get(":eventID", "applicants", use: getApplicantsByEventId)
+        eventsRoute.get(":eventID", "workers", use: getWorkersByEventId)
     }
     fileprivate func getAll(req: Request) -> EventLoopFuture<[Event.Public]> {
         Event.query(on: req.db).all().asPublic()
@@ -112,11 +115,32 @@ struct EventController: RouteCollection {
             guard !exists else {
                 return req.eventLoop.future(error: EventError.eventTitleTaken)
             }
-            event.$parentEvent.id = mainEvent.id// TODO
+            event.$parentEvent.id = mainEvent.id
             return event.save(on: req.db)
         }.flatMap {
             req.eventLoop.future(event.asPublic())
         }
+    }
+    fileprivate func getSubEventsByEventId(req: Request) -> EventLoopFuture<[Event.Public]> {
+        Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                event.$subEvents.get(on: req.db).asPublic()
+              }
+    }
+    fileprivate func getApplicantsByEventId(req: Request) -> EventLoopFuture<[User.Public]> {
+        Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                event.$applicants.get(on: req.db).asPublic()
+              }
+    }
+    fileprivate func getWorkersByEventId(req: Request) -> EventLoopFuture<[User.Public]> {
+        Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                event.$workers.get(on: req.db).asPublic()
+              }
     }
     private func checkIfExists(_ eventTitle: String, req: Request) -> EventLoopFuture<Bool> {
         Event.query(on: req.db)

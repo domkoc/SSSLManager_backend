@@ -38,6 +38,8 @@ struct UserController: RouteCollection {
         tokenProtected.get("me", use: getMyOwnUser)
         tokenProtected.post("logout", use: logout)
         tokenProtected.put("update", use: update)
+        tokenProtected.get(":userID", "events", use: getEventByUserId)
+        tokenProtected.get(":userID", use: getUser)
         let passwordProtected = usersRoute.grouped(User.authenticator())
         passwordProtected.post("login", use: login)
     }
@@ -89,6 +91,20 @@ struct UserController: RouteCollection {
     fileprivate func update(req: Request) throws -> EventLoopFuture<User.Public> {
             //let user = try req.auth.require(User.self) // TODO: Itt tartok
         throw Abort(.notImplemented)
+    }
+    fileprivate func getEventByUserId(req: Request) throws -> EventLoopFuture<[Event.Public]> {
+        User.find(req.parameters.get("userID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { user in
+                user.$events.get(on: req.db).asPublic()
+              }
+    }
+    fileprivate func getUser(req: Request) throws -> EventLoopFuture<User.Public> {
+        User.find(req.parameters.get("userID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .map { user in
+                user.asPublic()
+            }
     }
     private func checkIfUserExists(_ username: String, req: Request) -> EventLoopFuture<Bool> {
         User.query(on: req.db)
