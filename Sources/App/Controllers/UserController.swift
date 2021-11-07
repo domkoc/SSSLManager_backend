@@ -16,6 +16,11 @@ struct UserSignup: Content {
     let schgroup: SCHgroup?
 }
 
+struct UserLogin: Content {
+    let email: String
+    let password: String
+}
+
 struct NewSession: Content {
     let token: String
     let user: User.Public
@@ -40,7 +45,7 @@ struct UserController: RouteCollection {
         tokenProtected.put("update", use: update)
         tokenProtected.get(":userID", "events", use: getEventByUserId)
         tokenProtected.get(":userID", use: getUser)
-        let passwordProtected = usersRoute.grouped(User.authenticator())
+        let passwordProtected = usersRoute.grouped(UserLoginAuthenticator(), User.guardMiddleware())
         passwordProtected.post("login", use: login)
     }
     fileprivate func create(req: Request) throws -> EventLoopFuture<NewSession> {

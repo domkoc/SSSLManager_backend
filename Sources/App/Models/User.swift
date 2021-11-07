@@ -7,6 +7,7 @@
 
 import Fluent
 import Vapor
+import Darwin
 
 enum SCHgroup: String, Codable {
     case sir
@@ -101,6 +102,10 @@ extension EventLoopFuture where Value: User {
   }
 }
 
+extension EventLoopFuture: Authenticatable where Value: User {
+    
+}
+
 extension Collection where Element: User {
   func asPublic() -> [User.Public] {
     self.map { $0.asPublic() }
@@ -122,3 +127,18 @@ extension User: ModelAuthenticatable {
 }
 
 extension User: ModelSessionAuthenticatable {}
+
+extension User: Authenticatable {}
+
+struct UserLoginAuthenticator: RequestAuthenticator {
+    func authenticate(request req: Request) -> EventLoopFuture<Void> {
+        let userLogin = try! req.content.decode(UserLogin.self)
+        return User.query(on: req.db)
+            .filter(\.$username == userLogin.email)
+            .first()
+            .unwrap(or: Abort(.unauthorized)).map { user in
+                guard try! user.verify(password: userLogin.password) else { return }
+                req.auth.login(user)
+        }
+    }
+}
