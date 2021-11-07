@@ -24,6 +24,7 @@ struct UserLogin: Content {
 struct NewSession: Content {
     let token: String
     let user: User.Public
+    let expiration: Double?
 }
 
 extension UserSignup: Validatable {
@@ -66,7 +67,7 @@ struct UserController: RouteCollection {
             token = newToken
             return token.save(on: req.db)
         }.flatMapThrowing {
-            NewSession(token: token.value, user: try user.asPublic())
+            NewSession(token: token.value, user: try user.asPublic(), expiration: token.expiresAt?.timeIntervalSince1970)
         }
     }
     fileprivate func login(req: Request) throws -> EventLoopFuture<NewSession> {
@@ -75,7 +76,7 @@ struct UserController: RouteCollection {
         return token
             .save(on: req.db)
             .flatMapThrowing {
-                NewSession(token: token.value, user: try user.asPublic())
+                NewSession(token: token.value, user: try user.asPublic(), expiration: token.expiresAt?.timeIntervalSince1970)
             }
     }
     func getMyOwnUser(req: Request) throws -> User.Public {

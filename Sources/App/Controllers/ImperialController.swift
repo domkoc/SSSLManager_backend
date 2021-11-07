@@ -62,7 +62,7 @@ struct ImperialController: RouteCollection {
                 let token = try user.createToken(source: .login)
                 token.save(on: req.db)
                     .flatMapThrowing {
-                        NewSession(token: token.value, user: try user.asPublic())
+                        NewSession(token: token.value, user: try user.asPublic(), expiration: token.expiresAt?.timeIntervalSince1970)
                     }
                 redirectURL = token.save(on: req.db).map {
                     "ssslmanager://auth?token=\(token.value)"
