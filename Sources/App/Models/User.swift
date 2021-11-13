@@ -30,8 +30,8 @@ final class User {
         let nickname: String?
         let schgroup: SCHgroup?
         let roles: [Roles]
-        let createdAt: Date?
-        let updatedAt: Date?
+        let createdAt: Double?
+        let updatedAt: Double?
     }
     static let schema = "users"
     @ID(key: .id)
@@ -91,8 +91,8 @@ extension User {
                nickname: nickname,
                schgroup: schgroup,
                roles: roles,
-               createdAt: createdAt,
-               updatedAt: updatedAt)
+               createdAt: createdAt?.timeIntervalSince1970,
+               updatedAt: updatedAt?.timeIntervalSince1970)
     }
 }
 
