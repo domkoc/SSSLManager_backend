@@ -7,6 +7,7 @@
 
 import Vapor
 import Fluent
+import Foundation
 
 struct UserSignup: Content {
     let username: String
@@ -27,6 +28,14 @@ struct NewSession: Content {
     let expiration: Double?
 }
 
+struct UserEdit: Content {
+    let id: UUID
+    let username: String
+    let fullname: String
+    let nickname: String?
+    let schgroup: SCHgroup?
+}
+
 extension UserSignup: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("username", as: String.self, is: !.empty)
@@ -36,6 +45,16 @@ extension UserSignup: Validatable {
         validations.add("schgroup", as: SCHgroup.self)
     }
 }
+
+extension UserEdit: Validatable {
+    static func validations(_ validations: inout Validations) {
+        validations.add("username", as: String.self, is: !.empty)
+        validations.add("username", as: String.self, is: .email)
+        validations.add("fullname", as: String.self, is: !.empty)
+        validations.add("schgroup", as: SCHgroup.self)
+    }
+}
+
 struct UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let usersRoute = routes.grouped("users")
@@ -95,8 +114,21 @@ struct UserController: RouteCollection {
             }
     }
     fileprivate func update(req: Request) throws -> EventLoopFuture<User.Public> {
-            //let user = try req.auth.require(User.self) // TODO: Itt tartok
-        throw Abort(.notImplemented)
+        let loggedInUser = try req.auth.require(User.self)
+        try UserEdit.validate(content: req)
+        let userEdit = try req.content.decode(UserEdit.self)
+        guard userEdit.id == loggedInUser.id else { throw UserError.unauthorized }
+        return User.find(userEdit.id, on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { user in
+                user.username = userEdit.username
+                user.fullname = userEdit.fullname
+                user.nickname = userEdit.nickname
+                user.schgroup = userEdit.schgroup
+                return user.save(on: req.db).map {
+                    user.asPublic()
+                }
+        }
     }
     fileprivate func getEventByUserId(req: Request) throws -> EventLoopFuture<[Event.Public]> {
         User.find(req.parameters.get("userID"), on: req.db)

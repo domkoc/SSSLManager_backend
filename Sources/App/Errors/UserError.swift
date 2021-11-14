@@ -9,6 +9,7 @@ import Vapor
 
 enum UserError {
     case usernameTaken
+    case unauthorized
 }
 
 extension UserError: AbortError {
@@ -19,12 +20,16 @@ extension UserError: AbortError {
         switch self {
         case .usernameTaken:
             return .conflict
+        case .unauthorized:
+            return .unauthorized
         }
     }
     var reason: String {
         switch self {
         case .usernameTaken:
             return "Username already taken"
+        case .unauthorized:
+            return "Unauthorized"
         }
     }
 }
