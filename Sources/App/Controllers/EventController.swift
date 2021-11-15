@@ -42,7 +42,10 @@ struct EventController: RouteCollection {
         eventsRoute.get(":eventID", "workers", use: getWorkersByEventId)
     }
     fileprivate func getAll(req: Request) -> EventLoopFuture<[Event.Public]> {
-        Event.query(on: req.db).all().asPublic()
+        Event.query(on: req.db)
+            .sort(\.$startDate)
+            .all()
+            .asPublic()
     }
     fileprivate func create(req: Request) throws -> EventLoopFuture<Event.Public> {
         let user = try req.auth.require(User.self)
