@@ -26,6 +26,10 @@ extension NewEvent: Validatable {
     }
 }
 
+struct EventApplicationState: Content {
+    var didApply: Bool
+}
+
 struct EventController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         let eventsRoute = routes.grouped("events")
@@ -33,8 +37,11 @@ struct EventController: RouteCollection {
         eventsRoute.post("new", use: create)
         eventsRoute.get("all", use: getAll)
         eventsRoute.get(":eventID", use: getEventById)
-        eventsRoute.post(":eventID", "apply", use: applyToEvent)
-        eventsRoute.delete(":eventID", "apply", use: deleteApplicationToEvent)
+        eventsRoute.get(":eventID", "apply", use: getApplyedToEvent)
+        eventsRoute.post(":eventID", "apply", use: applyOrUnapplyToEvent)
+//        eventsRoute.post(":eventID", "apply", use: applyToEvent)
+//        eventsRoute.delete(":eventID", "apply", use: deleteApplicationToEvent)
+        eventsRoute.post(":eventID", "apply", "toggle", use: toggleApplyability)
         eventsRoute.post(":eventID", ":userID", use: acceptApplicant)
         eventsRoute.post(":eventID", "addSubEvent", use: addSubEvent)
         eventsRoute.get(":eventID", "subEvents", use: getSubEventsByEventId)
@@ -65,6 +72,55 @@ struct EventController: RouteCollection {
         try Event.find(req.parameters.get("eventID"), on: req.db)
             .unwrap(or: Abort(.notFound))
             .asPublic()
+    }
+    fileprivate func getApplyedToEvent(req: Request) throws -> EventLoopFuture<EventApplicationState> {
+        let user = try req.auth.require(User.self)
+        return Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                event.$applicants.get(on: req.db)
+                    .map { applicants in
+                        EventApplicationState(didApply: applicants.contains(where: { $0.id == user.id }))
+                }
+            }
+    }
+    fileprivate func applyOrUnapplyToEvent(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let user = try req.auth.require(User.self)
+        return Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                event.$applicants.get(on: req.db)
+                    .flatMap { applicants in
+                        if applicants.contains(where: { $0.id == user.id }) {
+                            if event.isApplyable {
+                                return event.$applicants.detach(user, on: req.db).transform(to: .accepted)
+                            } else {
+                                return req.eventLoop.future(error: EventError.notApplyable)
+                            }
+                        } else {
+                            if event.isApplyable {
+                                return event.$applicants.attach(user, on: req.db).transform(to: .accepted)
+                            } else {
+                                return req.eventLoop.future(error: EventError.notApplyable)
+                            }
+                        }
+                }
+            }
+    }
+    fileprivate func toggleApplyability(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let user = try req.auth.require(User.self)
+        return Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                if user.id != event.$organizer.id {
+                    return req.eventLoop.future(HTTPStatus.unauthorized)
+                } else {
+                    event.isApplyable.toggle()
+                    return event.save(on: req.db).map {
+                        return HTTPStatus.ok
+                    }
+                }
+            }
     }
     fileprivate func applyToEvent(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let user = try req.auth.require(User.self)
