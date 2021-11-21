@@ -42,7 +42,7 @@ struct EventController: RouteCollection {
 //        eventsRoute.post(":eventID", "apply", use: applyToEvent)
 //        eventsRoute.delete(":eventID", "apply", use: deleteApplicationToEvent)
         eventsRoute.post(":eventID", "apply", "toggle", use: toggleApplyability)
-        eventsRoute.post(":eventID", ":userID", use: acceptApplicant)
+        eventsRoute.post(":eventID", "accept", ":userID", use: acceptApplicant)
         eventsRoute.post(":eventID", "addSubEvent", use: addSubEvent)
         eventsRoute.get(":eventID", "subEvents", use: getSubEventsByEventId)
         eventsRoute.get(":eventID", "applicants", use: getApplicantsByEventId)
