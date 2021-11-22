@@ -52,7 +52,7 @@ struct EventController: RouteCollection {
         Event.query(on: req.db)
             .sort(\.$startDate)
             .all()
-            .asPublic()
+            .map { $0.onlyMainEvents().asPublic() }
     }
     fileprivate func create(req: Request) throws -> EventLoopFuture<Event.Public> {
         let user = try req.auth.require(User.self)

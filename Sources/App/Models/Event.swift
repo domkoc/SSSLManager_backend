@@ -108,22 +108,28 @@ extension Event {
              applicationEnd: applicationEnd?.timeIntervalSince1970,
              parentEvent: $parentEvent.id)
   }
+    func isMain() -> Bool {
+        return self.$parentEvent.id == nil
+    }
 }
 
 extension EventLoopFuture where Value: Event {
-  func asPublic() throws -> EventLoopFuture<Event.Public> {
-    self.map { $0.asPublic() }
-  }
+    func asPublic() throws -> EventLoopFuture<Event.Public> {
+        self.map { $0.asPublic() }
+    }
 }
 
 extension Collection where Element: Event {
-  func asPublic() -> [Event.Public] {
-    self.map { $0.asPublic() }
-  }
+    func asPublic() -> [Event.Public] {
+        self.map { $0.asPublic() }
+    }
+    func onlyMainEvents() -> [Event] {
+        self.filter { $0.isMain() }
+    }
 }
 
 extension EventLoopFuture where Value == Array<Event> {
-  func asPublic() -> EventLoopFuture<[Event.Public]> {
-    self.map { $0.asPublic() }
-  }
+    func asPublic() -> EventLoopFuture<[Event.Public]> {
+        self.map { $0.asPublic() }
+    }
 }
