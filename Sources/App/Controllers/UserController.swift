@@ -36,6 +36,10 @@ struct UserEdit: Content {
     let schgroup: SCHgroup?
 }
 
+struct NewProfileImageUpload: Content {
+    let image: Data
+}
+
 extension UserSignup: Validatable {
     static func validations(_ validations: inout Validations) {
         validations.add("username", as: String.self, is: !.empty)
@@ -56,6 +60,7 @@ extension UserEdit: Validatable {
 }
 
 struct UserController: RouteCollection {
+    let imageFolder = "ProfilePictures/"
     func boot(routes: RoutesBuilder) throws {
         let usersRoute = routes.grouped("users")
         usersRoute.post("signup", use: create)
@@ -63,6 +68,8 @@ struct UserController: RouteCollection {
         tokenProtected.get("me", use: getMyOwnUser)
         tokenProtected.post("logout", use: logout)
         tokenProtected.put("update", use: update)
+        tokenProtected.on(.POST, "me", "image", body: .collect(maxSize: "10mb"), use: uploadProfileImage)
+        tokenProtected.get(":userID", "image", use: getProfilePicture)
         tokenProtected.get(":userID", "events", use: getEventByUserId)
         tokenProtected.get(":userID", use: getUser)
         let passwordProtected = usersRoute.grouped(UserLoginAuthenticator(), User.guardMiddleware())
@@ -111,6 +118,35 @@ struct UserController: RouteCollection {
             .unwrap(or: Abort(.notFound))
             .flatMap { token in
                 token.delete(on: req.db).transform(to: .noContent)
+            }
+    }
+    fileprivate func uploadProfileImage(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let loggedInUser = try req.auth.require(User.self)
+        let newProfileImageUpload = try req.content.decode(NewProfileImageUpload.self)
+        return User.find(loggedInUser.id, on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { user in
+                let name = "\(user.id!.uuidString)-\(UUID()).jpg"
+                let path = req.application.directory.workingDirectory + imageFolder + name
+                return req.fileio
+                    .writeFile(.init(data: newProfileImageUpload.image), at: path)
+                    .flatMap {
+                        user.image = name
+                        return user.save(on: req.db).map {
+                            HTTPStatus.ok
+                        }
+                    }
+            }
+    }
+    fileprivate func getProfilePicture(req: Request) throws -> EventLoopFuture<Response> {
+        User.find(req.parameters.get("userID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { user in
+                guard let filename = user.image else {
+                    throw Abort(.notFound)
+                }
+                let path = req.application.directory.workingDirectory + imageFolder + filename
+                return req.fileio.streamFile(at: path)
             }
     }
     fileprivate func update(req: Request) throws -> EventLoopFuture<User.Public> {

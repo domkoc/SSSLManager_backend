@@ -15,6 +15,7 @@ struct CreateEvent: Migration {
             .field("title", .string, .required)
             .field("organizer", .uuid, .required,
                     .references("users", "id", onDelete: .cascade))
+            .field("image", .string)
             .field("description", .string, .required)
             .field("start_date", .datetime, .required)
             .field("end_date", .datetime, .required)

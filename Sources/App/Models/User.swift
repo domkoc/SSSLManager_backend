@@ -38,6 +38,8 @@ final class User {
     var id: UUID?
     @Field(key: "username")
     var username: String
+    @OptionalField(key: "image")
+    var image: String?
     @Field(key: "password_hash")
     var passwordHash: String
     @Field(key: "fullname")
@@ -55,10 +57,17 @@ final class User {
     @Children(for: \.$organizer)
     var events: [Event]
     init() {}
-    init(id: UUID? = nil, username: String, passwordHash: String, fullname: String, nickname: String?, schgroup: SCHgroup?, roles: [Roles]) {
+    init(id: UUID? = nil,
+         username: String,
+         passwordHash: String,
+         fullname: String,
+         nickname: String?,
+         schgroup: SCHgroup?,
+         roles: [Roles]) {
         self.id = id
         self.username = username
         self.passwordHash = passwordHash
+        self.image = "default.jpg"
         self.fullname = fullname
         self.nickname = nickname
         self.schgroup = schgroup

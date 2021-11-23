@@ -30,7 +30,12 @@ struct EventApplicationState: Content {
     var didApply: Bool
 }
 
+struct NewEventImageUpload: Content {
+    let image: Data
+}
+
 struct EventController: RouteCollection {
+    let imageFolder = "EventPictures/"
     func boot(routes: RoutesBuilder) throws {
         let eventsRoute = routes.grouped("events")
             .grouped(Token.authenticator())
@@ -44,6 +49,9 @@ struct EventController: RouteCollection {
         eventsRoute.post(":eventID", "apply", "toggle", use: toggleApplyability)
         eventsRoute.post(":eventID", "accept", ":userID", use: acceptApplicant)
         eventsRoute.post(":eventID", "addSubEvent", use: addSubEvent)
+        eventsRoute.put(":eventID", "image", use: uploadEventImage)
+        eventsRoute.on(.POST, ":eventID", "image", body: .collect(maxSize: "10mb"), use: uploadEventImage)
+        eventsRoute.get(":eventID", "image", use: getEventPicture)
         eventsRoute.get(":eventID", "subEvents", use: getSubEventsByEventId)
         eventsRoute.get(":eventID", "applicants", use: getApplicantsByEventId)
         eventsRoute.get(":eventID", "workers", use: getWorkersByEventId)
@@ -179,6 +187,39 @@ struct EventController: RouteCollection {
         }.flatMap {
             req.eventLoop.future(event.asPublic())
         }
+    }
+    fileprivate func uploadEventImage(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let loggedInUser = try req.auth.require(User.self)
+        let newEventImageUpload = try req.content.decode(NewEventImageUpload.self)
+        return Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMap { event in
+                if event.$organizer.id != loggedInUser.id {
+                    return req.eventLoop.future(.forbidden)
+                } else {
+                    let name = "\(event.id!.uuidString)-\(UUID()).jpg"
+                    let path = req.application.directory.workingDirectory + imageFolder + name
+                    return req.fileio
+                        .writeFile(.init(data: newEventImageUpload.image), at: path)
+                        .flatMap {
+                            event.image = name
+                            return event.save(on: req.db).map {
+                                HTTPStatus.ok
+                            }
+                        }
+                }
+            }
+    }
+    fileprivate func getEventPicture(req: Request) throws -> EventLoopFuture<Response> {
+        Event.find(req.parameters.get("eventID"), on: req.db)
+            .unwrap(or: Abort(.notFound))
+            .flatMapThrowing { event in
+                guard let filename = event.image else {
+                    throw Abort(.notFound)
+                }
+                let path = req.application.directory.workingDirectory + imageFolder + filename
+                return req.fileio.streamFile(at: path)
+            }
     }
     fileprivate func getSubEventsByEventId(req: Request) -> EventLoopFuture<[Event.Public]> {
         Event.find(req.parameters.get("eventID"), on: req.db)

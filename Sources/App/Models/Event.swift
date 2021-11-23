@@ -30,6 +30,8 @@ final class Event: Model, Content {
     var organizer: User
     @Field(key: "title")
     var title: String
+    @OptionalField(key: "image")
+    var image: String?
     @Field(key: "description")
     var description: String
     @Field(key: "start_date")
@@ -71,6 +73,7 @@ final class Event: Model, Content {
         self.id = id
         self.$organizer.id = organizer
         self.title = title
+        self.image = "default.jpg"
         self.description = description
         self.startDate = startDate
         self.endDate = endDate
