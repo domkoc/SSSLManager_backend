@@ -93,3 +93,8 @@ iOSInjectionProject/
 
 *.env
 *.env.development
+
+EventPictures/*.jpg
+!EventPictures/default.jpg
+ProfilePictures/*.jpg
+!ProfilePictures/default.jpg
