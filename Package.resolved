@@ -56,24 +56,6 @@
         }
       },
       {
-        "package": "Imperial",
-        "repositoryURL": "https://github.com/vapor-community/Imperial.git",
-        "state": {
-          "branch": null,
-          "revision": "3795364cf6fd2753be7bb14cc55e414f01727c6c",
-          "version": "1.1.0"
-        }
-      },
-      {
-        "package": "jwt-kit",
-        "repositoryURL": "https://github.com/vapor/jwt-kit.git",
-        "state": {
-          "branch": null,
-          "revision": "1822bb0abf0a31a4b5078ec19061c548835253b5",
-          "version": "4.3.0"
-        }
-      },
-      {
         "package": "multipart-kit",
         "repositoryURL": "https://github.com/vapor/multipart-kit.git",
         "state": {
@@ -89,24 +71,6 @@
           "branch": null,
           "revision": "a0801a36a6ad501d5ad6285cbcd4774de6b0a734",
           "version": "4.3.0"
-        }
-      },
-      {
-        "package": "sendgrid",
-        "repositoryURL": "https://github.com/vapor-community/sendgrid.git",
-        "state": {
-          "branch": null,
-          "revision": "c744bc4398bd8dec50e3a6cfb0cdeca1aa853c07",
-          "version": "4.0.0"
-        }
-      },
-      {
-        "package": "sendgrid-kit",
-        "repositoryURL": "https://github.com/vapor-community/sendgrid-kit.git",
-        "state": {
-          "branch": null,
-          "revision": "e5f7506f9cc6b10cf0f52cb08ab4b9a43cfba6dc",
-          "version": "1.0.1"
         }
       },
       {
